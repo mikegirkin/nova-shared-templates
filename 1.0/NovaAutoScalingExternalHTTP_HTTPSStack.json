@@ -21,9 +21,14 @@
     "Port": { "Type": "String" },
     "ScaleDownThreshold": { "Type": "String" },
     "ScaleUpThreshold": { "Type": "String" },
+    "ScalingEvaluationPeriods": { "Type": "Number", "Default" : 1 },
+    "ScalingMetricName": { "Type": "String", "Default" : "RequestCount" },
+    "ScalingStatistic": { "Type": "String", "Default" : "Sum" },
+    "ScalingUnit": { "Type": "String", "Default" : "Count" },
     "SSLCertificateArn": { "Type": "String" },
     "StackType": { "Type": "String" },
     "TeamName": { "Type": "String" },
+    "TerminationPolicy": { "Type": "String", "Default": "Default" },
     "VpcSubnetIds": { "Type": "CommaDelimitedList" }
   },
   "Resources": {
@@ -301,7 +306,8 @@
           { "Key": "Team", "PropagateAtLaunch": true, "Value": { "Ref": "TeamName" } },
           { "Key": "Name", "PropagateAtLaunch": true, "Value": { "Ref": "ApplicationName" } },
           { "Key": "Environment", "PropagateAtLaunch": true, "Value": { "Ref": "StackType" } }
-        ]
+        ],
+        "TerminationPolicies": [ { "Ref": "TerminationPolicy" } ]
       }
     },
     "AutoScalingScaleDownPolicy": {
@@ -327,13 +333,13 @@
         "AlarmDescription": { "Fn::Join" : [ " ", [ { "Ref": "ApplicationName" }, "Scale Up alarm" ] ] },
         "ComparisonOperator": "GreaterThanThreshold",
         "Dimensions": [{ "Name": "LoadBalancerName", "Value": { "Ref": "LoadBalancer" } }],
-        "EvaluationPeriods": "1",
-        "MetricName": "RequestCount",
+        "EvaluationPeriods": { "Ref": "ScalingEvaluationPeriods" },
+        "MetricName": { "Ref": "ScalingMetricName" },
         "Namespace": "AWS/ELB",
         "Period": "60",
-        "Statistic": "Sum",
+        "Statistic": { "Ref": "ScalingStatistic" },
         "Threshold": { "Ref": "ScaleUpThreshold" },
-        "Unit": "Count"
+        "Unit": { "Ref": "ScalingUnit" }
       }
     },
     "ScaleDownCloudwatchAlarmLow": {
@@ -343,13 +349,13 @@
         "AlarmDescription": { "Fn::Join" : [ " ", [ { "Ref": "ApplicationName" }, "Scale Down alarm" ] ] },
         "ComparisonOperator": "LessThanThreshold",
         "Dimensions": [{ "Name": "LoadBalancerName", "Value": { "Ref": "LoadBalancer" } }],
-        "EvaluationPeriods": "1",
-        "MetricName": "RequestCount",
+        "EvaluationPeriods": { "Ref": "ScalingEvaluationPeriods" },
+        "MetricName": { "Ref": "ScalingMetricName" },
         "Namespace": "AWS/ELB",
         "Period": "60",
-        "Statistic": "Sum",
+        "Statistic": { "Ref": "ScalingStatistic" },
         "Threshold": { "Ref": "ScaleDownThreshold" },
-        "Unit": "Count"
+        "Unit": { "Ref": "ScalingUnit" }
       }
     },
     "ELBUnHealthyInstanceCloudwatchAlarm": {
