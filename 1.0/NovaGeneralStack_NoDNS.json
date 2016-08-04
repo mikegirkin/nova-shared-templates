@@ -14,7 +14,6 @@
     "LogsList": { "Type": "String" },
     "MaxInstances": { "Type": "Number", "Default": 1 },
     "MinInstances": { "Type": "Number", "Default": 1 },
-    "MinutesUnHealthyHostCheck": { "Type": "String", "Default": "3" },
     "Port": { "Type": "String" },
     "StackType": { "Type": "String" },
     "TeamName": { "Type": "String" },
@@ -271,22 +270,6 @@
           { "Key": "Name", "PropagateAtLaunch": true, "Value": { "Ref": "ApplicationName" } },
           { "Key": "Environment", "PropagateAtLaunch": true, "Value": { "Ref": "StackType" } }
         ]
-      }
-    },
-    "ELBUnHealthyInstanceCloudwatchAlarm": {
-      "Type": "AWS::CloudWatch::Alarm",
-      "Properties": {
-        "AlarmActions": [ { "Ref": "AutoScalingScaleDownPolicy" } ],
-        "AlarmDescription": { "Fn::Join" : [ " ", [ "Alert if ", { "Ref": "ApplicationName" }, " has 1 or more unhealthy hosts for ", { "Ref": "MinutesUnHealthyHostCheck" }, " minutes" ] ] },
-        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
-        "Dimensions": [{ "Name": "LoadBalancerName", "Value": { "Ref": "LoadBalancer" } }],
-        "EvaluationPeriods": { "Ref": "MinutesUnHealthyHostCheck" },
-        "MetricName": "UnHealthyHostCount",
-        "Namespace": "AWS/ELB",
-        "Period": "60",
-        "Statistic": "Sum",
-        "Threshold": "1",
-        "Unit": "Count"
       }
     }
   },
