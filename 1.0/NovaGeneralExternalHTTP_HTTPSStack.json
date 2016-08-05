@@ -11,6 +11,7 @@
     "ElbVpcSubnetIds": { "Type": "CommaDelimitedList" },
     "FallbackKeyName": { "Type": "String", "Default": "nova" },
     "HealthcheckUrl": { "Type": "String" },
+    "HostedZoneId": { "Type": "String", "Default" : "Z35SXDOTRQ7X7K" },
     "HostedZoneName": { "Type": "String" },
     "InstanceSecurityGroups" : { "Type" : "CommaDelimitedList" },
     "InstanceType": { "Type": "String", "Default": "t2.medium" },
@@ -41,13 +42,6 @@
              "PolicyDocument": {
                 "Version" : "2012-10-17",
                 "Statement": [ {
-                   "Effect": "Deny",
-                   "NotAction": [
-                     "ec2:DescribeTags",
-                     "iam:ListAccountAliases"
-                   ],
-                   "Resource": "*"
-                }, {
                    "Effect": "Allow",
                    "Action": [
                      "apigateway:*",
@@ -167,7 +161,7 @@
           "SetIdentifier": "cloudformation",
           "AliasTarget": {
             "EvaluateTargetHealth": false,
-            "HostedZoneId": { "Fn::GetAtt" : [ "LoadBalancer", "CanonicalHostedZoneNameID" ] },
+            "HostedZoneId": { "Ref": "HostedZoneId" },
             "DNSName": { "Fn::Join" : [ ".", [ "dualstack", { "Fn::GetAtt" : [ "LoadBalancer", "DNSName" ] } ] ] }
           }
         }]
