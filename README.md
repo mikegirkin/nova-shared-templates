@@ -44,6 +44,11 @@ A simple non auto-scaling stack.
 
 A simple non auto-scaling stack with an internet-facing ELB and an extra parameter for separate ELB subnets.
 
+### 1.0/NovaGeneralExternalHTTP_HTTPSStack.json
+
+A simple non auto-scaling stack with an internet-facing ELB and an extra parameter for separate ELB subnets
+and both HTTP & HTTPS ELB listeners.
+
 ### 1.0/NovaGeneralStack_NoDNS.json
 
 A simple non auto-scaling stack, without a DNS record.
