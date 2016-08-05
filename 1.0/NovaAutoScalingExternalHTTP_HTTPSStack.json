@@ -12,6 +12,7 @@
     "FallbackKeyName": { "Type": "String", "Default": "nova" },
     "HealthcheckUrl": { "Type": "String" },
     "HostedZoneName": { "Type": "String" },
+    "HostedZoneId": { "Type": "String", "Default" : "Z35SXDOTRQ7X7K" },
     "InstanceSecurityGroups" : { "Type" : "CommaDelimitedList" },
     "InstanceType": { "Type": "String", "Default": "t2.medium" },
     "LogsList": { "Type": "String" },
@@ -259,7 +260,7 @@
           "SetIdentifier": "cloudformation",
           "AliasTarget": {
             "EvaluateTargetHealth": false,
-            "HostedZoneId": { "Fn::GetAtt" : [ "LoadBalancer", "CanonicalHostedZoneNameID" ] },
+            "HostedZoneId": { "Ref": "HostedZoneId" },
             "DNSName": { "Fn::Join" : [ ".", [ "dualstack", { "Fn::GetAtt" : [ "LoadBalancer", "DNSName" ] } ] ] }
           }
         }]
