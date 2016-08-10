@@ -7,10 +7,10 @@
     "AutoScalingGroupHealthCheckType": { "Type": "String", "Default": "ELB" },
     "DNS": { "Type": "String" },
     "ElbHealthCheckGracePeriod": { "Type": "Number", "Default": 300 },
+    "ElbHostedZoneId": { "Type": "String", "Default" : "Z35SXDOTRQ7X7K" },
     "ElbSecurityGroups" : { "Type" : "CommaDelimitedList" },
     "FallbackKeyName": { "Type": "String", "Default": "nova" },
     "HealthcheckUrl": { "Type": "String" },
-    "HostedZoneId": { "Type": "String", "Default" : "Z35SXDOTRQ7X7K" },
     "HostedZoneName": { "Type": "String" },
     "InstanceSecurityGroups" : { "Type" : "CommaDelimitedList" },
     "InstanceType": { "Type": "String", "Default": "t2.medium" },
@@ -250,7 +250,7 @@
           "SetIdentifier": "cloudformation",
           "AliasTarget": {
             "EvaluateTargetHealth": false,
-            "HostedZoneId": { "Ref": "HostedZoneId" },
+            "HostedZoneId": { "Ref": "ElbHostedZoneId" },
             "DNSName": { "Fn::Join" : [ ".", [ "dualstack", { "Fn::GetAtt" : [ "LoadBalancer", "DNSName" ] } ] ] }
           }
         }]
