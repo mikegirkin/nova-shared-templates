@@ -24,6 +24,7 @@
     "ScaleUpEvaluationPeriods": { "Type": "Number", "Default" : 1 },
     "ScaleUpPeriod": { "Type": "Number", "Default" : 60 },
     "ScaleUpThreshold": { "Type": "String" },
+    "ScalingDimension": { "Type": "String", "Default" : "LoadBalancer" },
     "ScalingMetricName": { "Type": "String", "Default" : "RequestCount" },
     "ScalingStatistic": { "Type": "String", "Default" : "Sum" },
     "ScalingUnit": { "Type": "String", "Default" : "Count" },
@@ -31,6 +32,11 @@
     "TeamName": { "Type": "String" },
     "TerminationPolicy": { "Type": "String", "Default": "Default" },
     "VpcSubnetIds": { "Type": "CommaDelimitedList" }
+  },
+  "Conditions" : {
+    "IsASGBasedScaling": {
+      "Fn::Equals" : [ "AutoScalingGroup", { "Ref": "ScalingDimension" } ]
+    }
   },
   "Resources": {
     "Role": {
@@ -325,10 +331,13 @@
         "AlarmActions": [ { "Ref": "AutoScalingScaleUpPolicy" } ],
         "AlarmDescription": { "Fn::Join" : [ " ", [ { "Ref": "ApplicationName" }, "Scale Up alarm" ] ] },
         "ComparisonOperator": "GreaterThanThreshold",
-        "Dimensions": [{ "Name": "LoadBalancerName", "Value": { "Ref": "LoadBalancer" } }],
+        "Dimensions": [ {
+          "Name" : { "Fn::If" : [ "IsASGBasedScaling", "AutoScalingGroupName", "LoadBalancerName" ] },
+          "Value": { "Fn::If" : [ "IsASGBasedScaling", { "Ref": "AutoScalingGroup" }, { "Ref": "LoadBalancer" } ] }
+        } ],
         "EvaluationPeriods": { "Ref": "ScaleUpEvaluationPeriods" },
         "MetricName": { "Ref": "ScalingMetricName" },
-        "Namespace": "AWS/ELB",
+        "Namespace": { "Fn::If" : [ "IsASGBasedScaling", "AWS/EC2", "AWS/ELB" ] },
         "Period": { "Ref": "ScaleUpPeriod" },
         "Statistic": { "Ref": "ScalingStatistic" },
         "Threshold": { "Ref": "ScaleUpThreshold" },
@@ -341,10 +350,13 @@
         "AlarmActions": [ { "Ref": "AutoScalingScaleDownPolicy" } ],
         "AlarmDescription": { "Fn::Join" : [ " ", [ { "Ref": "ApplicationName" }, "Scale Down alarm" ] ] },
         "ComparisonOperator": "LessThanThreshold",
-        "Dimensions": [{ "Name": "LoadBalancerName", "Value": { "Ref": "LoadBalancer" } }],
+        "Dimensions": [ {
+          "Name" : { "Fn::If" : [ "IsASGBasedScaling", "AutoScalingGroupName", "LoadBalancerName" ] },
+          "Value": { "Fn::If" : [ "IsASGBasedScaling", { "Ref": "AutoScalingGroup" }, { "Ref": "LoadBalancer" } ] }
+        } ],
         "EvaluationPeriods": { "Ref": "ScaleDownEvaluationPeriods" },
         "MetricName": { "Ref": "ScalingMetricName" },
-        "Namespace": "AWS/ELB",
+        "Namespace": { "Fn::If" : [ "IsASGBasedScaling", "AWS/EC2", "AWS/ELB" ] },
         "Period": { "Ref": "ScaleDownPeriod" },
         "Statistic": { "Ref": "ScalingStatistic" },
         "Threshold": { "Ref": "ScaleDownThreshold" },
