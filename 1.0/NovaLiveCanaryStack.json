@@ -2,7 +2,7 @@
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "Live Canary Stack",
   "Parameters" : {
-    "Ami": { "Type": "String", "Default": "ami-efc754f8" },
+    "Ami": { "Type": "String", "Default": "ami-7ba7cf6c" },
     "ApplicationName": { "Type": "String" },
     "AutoScalingGroupHealthCheckType": { "Type": "String", "Default": "ELB" },
     "ElbHealthCheckGracePeriod": { "Type": "Number", "Default": 300 },
