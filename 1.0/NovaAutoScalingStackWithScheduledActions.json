@@ -29,7 +29,7 @@
     "ScalingDimension": { "Type": "String", "Default" : "LoadBalancer" },
     "ScalingMetricName": { "Type": "String", "Default" : "RequestCount" },
     "ScalingStatistic": { "Type": "String", "Default" : "Sum" },
-    "ScalingUnit": { "Type": "String", "Default" : "Count" },
+    "ScalingUnit": { "Type": "String", "Default" : "Count", "Description" : "Unused, please ignore" },
     "ScheduleScaledUpMinInstances" : { "Type" : "Number", "Default" : 1 },
     "StackType": { "Type": "String" },
     "TeamName": { "Type": "String" },
@@ -343,8 +343,7 @@
         "Namespace": { "Fn::If" : [ "IsASGBasedScaling", "AWS/EC2", "AWS/ELB" ] },
         "Period": { "Ref": "ScaleUpPeriod" },
         "Statistic": { "Ref": "ScalingStatistic" },
-        "Threshold": { "Ref": "ScaleUpThreshold" },
-        "Unit": { "Ref": "ScalingUnit" }
+        "Threshold": { "Ref": "ScaleUpThreshold" }
       }
     },
     "ScaleDownCloudwatchAlarmLow": {
@@ -362,8 +361,7 @@
         "Namespace": { "Fn::If" : [ "IsASGBasedScaling", "AWS/EC2", "AWS/ELB" ] },
         "Period": { "Ref": "ScaleDownPeriod" },
         "Statistic": { "Ref": "ScalingStatistic" },
-        "Threshold": { "Ref": "ScaleDownThreshold" },
-        "Unit": { "Ref": "ScalingUnit" }
+        "Threshold": { "Ref": "ScaleDownThreshold" }
       }
     },
     "ScheduledScaleUp": {
