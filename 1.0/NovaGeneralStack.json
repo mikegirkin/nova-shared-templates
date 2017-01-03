@@ -2,7 +2,7 @@
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "General Stack",
   "Parameters" : {
-    "Ami": { "Type": "String", "Default": "ami-7ba7cf6c" },
+    "Ami": { "Type": "String", "Default": "ami-97fce480" },
     "ApplicationName": { "Type": "String" },
     "AutoScalingGroupHealthCheckType": { "Type": "String", "Default": "ELB" },
     "DNS": { "Type": "String" },
@@ -264,10 +264,7 @@
               "",
               [
                 "#!/bin/bash -ex\n",
-                "pip install -U gilt-nova\n",
-                "/usr/local/bin/nova setup\n",
-                "bash -ex /opt/nova/nova-env-setup.sh ", { "Ref" : "AWS::StackName" }, " ", { "Ref": "StackType" }, "\n",
-                "bash -ex /opt/nova/nova-logs-setup.sh ", { "Ref": "ApplicationName" }, " ", { "Ref": "LogsList" }, "\n"
+                "python /opt/nova/configure-cloudwatch-logs-agent.py ", { "Ref": "LogsList" }, "\n"
               ]
             ]
           }
