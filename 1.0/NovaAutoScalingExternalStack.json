@@ -2,7 +2,7 @@
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "AutoScaling External Stack",
   "Parameters" : {
-    "Ami": { "Type": "String", "Default": "ami-390ce92f" },
+    "Ami": { "Type": "String", "Default": "ami-d37c99c5" },
     "ApplicationName": { "Type": "String" },
     "AutoScalingGroupHealthCheckType": { "Type": "String", "Default": "ELB" },
     "DNS": { "Type": "String" },
