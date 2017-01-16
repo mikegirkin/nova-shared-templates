@@ -1,0 +1,371 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "AutoScaling External Stack",
+  "Parameters" : {
+    "Ami": { "Type": "String", "Default": "ami-0017f716" },
+    "ApplicationName": { "Type": "String" },
+    "AutoScalingGroupHealthCheckType": { "Type": "String", "Default": "ELB" },
+    "DNS": { "Type": "String" },
+    "ElbHealthCheckGracePeriod": { "Type": "Number", "Default": 300 },
+    "ElbHostedZoneId": { "Type": "String", "Default" : "Z35SXDOTRQ7X7K" },
+    "ElbSecurityGroups" : { "Type" : "CommaDelimitedList" },
+    "ElbVpcSubnetIds": { "Type": "CommaDelimitedList" },
+    "FallbackKeyName": { "Type": "String", "Default": "nova" },
+    "HealthcheckUrl": { "Type": "String" },
+    "HostedZoneName": { "Type": "String" },
+    "InstanceSecurityGroups" : { "Type" : "CommaDelimitedList" },
+    "InstanceType": { "Type": "String", "Default": "t2.medium" },
+    "LogsList": { "Type": "String" },
+    "MaxInstances": { "Type": "Number", "Default": 1 },
+    "MinInstances": { "Type": "Number", "Default": 1 },
+    "Port": { "Type": "String" },
+    "ScaleDownEvaluationPeriods": { "Type": "Number", "Default" : 1 },
+    "ScaleDownPeriod": { "Type": "Number", "Default" : 60 },
+    "ScaleDownThreshold": { "Type": "String" },
+    "ScaleUpEvaluationPeriods": { "Type": "Number", "Default" : 1 },
+    "ScaleUpPeriod": { "Type": "Number", "Default" : 60 },
+    "ScaleUpThreshold": { "Type": "String" },
+    "ScalingDimension": { "Type": "String", "Default" : "LoadBalancer" },
+    "ScalingMetricName": { "Type": "String", "Default" : "RequestCount" },
+    "ScalingStatistic": { "Type": "String", "Default" : "Sum" },
+    "ScalingUnit": { "Type": "String", "Default" : "Count", "Description" : "Unused, please ignore" },
+    "SSLCertificateArn": { "Type": "String" },
+    "StackType": { "Type": "String" },
+    "TeamName": { "Type": "String" },
+    "TerminationPolicy": { "Type": "String", "Default": "Default" },
+    "VpcSubnetIds": { "Type": "CommaDelimitedList" }
+  },
+  "Conditions" : {
+    "IsASGBasedScaling": {
+      "Fn::Equals" : [ "AutoScalingGroup", { "Ref": "ScalingDimension" } ]
+    }
+  },
+  "Resources": {
+    "Role": {
+       "Type": "AWS::IAM::Role",
+       "Properties": {
+          "AssumeRolePolicyDocument": {
+             "Version" : "2012-10-17",
+             "Statement": [ {
+                "Effect": "Allow",
+                "Principal": { "Service": [ "ec2.amazonaws.com" ] },
+                "Action": [ "sts:AssumeRole" ]
+             } ]
+          },
+          "Path": "/",
+          "Policies": [ {
+             "PolicyName": { "Fn::Join" : [ "-", [ { "Ref": "ApplicationName" }, "policy" ] ] },
+             "PolicyDocument": {
+                "Version" : "2012-10-17",
+                "Statement": [ {
+                   "Effect": "Allow",
+                   "NotAction": [ "iam:AddClientIDToOpenIDConnectProvider",
+                                  "iam:AddRoleToInstanceProfile",
+                                  "iam:AddUserToGroup",
+                                  "iam:AttachGroupPolicy",
+                                  "iam:AttachRolePolicy",
+                                  "iam:AttachUserPolicy",
+                                  "iam:ChangePassword",
+                                  "iam:CreateAccessKey",
+                                  "iam:CreateAccountAlias",
+                                  "iam:CreateGroup",
+                                  "iam:CreateInstanceProfile",
+                                  "iam:CreateLoginProfile",
+                                  "iam:CreateOpenIDConnectProvider",
+                                  "iam:CreatePolicy",
+                                  "iam:CreatePolicyVersion",
+                                  "iam:CreateRole",
+                                  "iam:CreateSAMLProvider",
+                                  "iam:CreateUser",
+                                  "iam:CreateVirtualMFADevice",
+                                  "iam:DeactivateMFADevice",
+                                  "iam:DeleteAccessKey",
+                                  "iam:DeleteAccountAlias",
+                                  "iam:DeleteAccountPasswordPolicy",
+                                  "iam:DeleteGroup",
+                                  "iam:DeleteGroupPolicy",
+                                  "iam:DeleteInstanceProfile",
+                                  "iam:DeleteLoginProfile",
+                                  "iam:DeleteOpenIDConnectProvider",
+                                  "iam:DeletePolicy",
+                                  "iam:DeletePolicyVersion",
+                                  "iam:DeleteRole",
+                                  "iam:DeleteRolePolicy",
+                                  "iam:DeleteSAMLProvider",
+                                  "iam:DeleteServerCertificate",
+                                  "iam:DeleteSigningCertificate",
+                                  "iam:DeleteSSHPublicKey",
+                                  "iam:DeleteUser",
+                                  "iam:DeleteUserPolicy",
+                                  "iam:DeleteVirtualMFADevice",
+                                  "iam:DetachGroupPolicy",
+                                  "iam:DetachRolePolicy",
+                                  "iam:DetachUserPolicy",
+                                  "iam:EnableMFADevice",
+                                  "iam:GenerateCredentialReport",
+                                  "iam:GetAccessKeyLastUsed",
+                                  "iam:GetAccountAuthorizationDetails",
+                                  "iam:GetAccountPasswordPolicy",
+                                  "iam:GetAccountSummary",
+                                  "iam:GetContextKeysForCustomPolicy",
+                                  "iam:GetContextKeysForPrincipalPolicy",
+                                  "iam:GetCredentialReport",
+                                  "iam:GetGroup",
+                                  "iam:GetGroupPolicy",
+                                  "iam:GetInstanceProfile",
+                                  "iam:GetLoginProfile",
+                                  "iam:GetOpenIDConnectProvider",
+                                  "iam:GetPolicy",
+                                  "iam:GetPolicyVersion",
+                                  "iam:GetRole",
+                                  "iam:GetRolePolicy",
+                                  "iam:GetSAMLProvider",
+                                  "iam:GetServerCertificate",
+                                  "iam:GetSSHPublicKey",
+                                  "iam:GetUser",
+                                  "iam:GetUserPolicy",
+                                  "iam:ListAccessKeys",
+                                  "iam:ListAttachedGroupPolicies",
+                                  "iam:ListAttachedRolePolicies",
+                                  "iam:ListAttachedUserPolicies",
+                                  "iam:ListEntitiesForPolicy",
+                                  "iam:ListGroupPolicies",
+                                  "iam:ListGroups",
+                                  "iam:ListGroupsForUser",
+                                  "iam:ListInstanceProfiles",
+                                  "iam:ListInstanceProfilesForRole",
+                                  "iam:ListMFADevices",
+                                  "iam:ListOpenIDConnectProviders",
+                                  "iam:ListPolicies",
+                                  "iam:ListPolicyVersions",
+                                  "iam:ListRolePolicies",
+                                  "iam:ListRoles",
+                                  "iam:ListSAMLProviders",
+                                  "iam:ListServerCertificates",
+                                  "iam:ListSigningCertificates",
+                                  "iam:ListSSHPublicKeys",
+                                  "iam:ListUserPolicies",
+                                  "iam:ListUsers",
+                                  "iam:ListVirtualMFADevices",
+                                  "iam:PutGroupPolicy",
+                                  "iam:PutRolePolicy",
+                                  "iam:PutUserPolicy",
+                                  "iam:RemoveClientIDFromOpenIDConnectProvider",
+                                  "iam:RemoveRoleFromInstanceProfile",
+                                  "iam:RemoveUserFromGroup",
+                                  "iam:ResyncMFADevice",
+                                  "iam:SetDefaultPolicyVersion",
+                                  "iam:SimulateCustomPolicy",
+                                  "iam:SimulatePrincipalPolicy",
+                                  "iam:UpdateAccessKey",
+                                  "iam:UpdateAccountPasswordPolicy",
+                                  "iam:UpdateAssumeRolePolicy",
+                                  "iam:UpdateGroup",
+                                  "iam:UpdateLoginProfile",
+                                  "iam:UpdateOpenIDConnectProviderThumbprint",
+                                  "iam:UpdateSAMLProvider",
+                                  "iam:UpdateServerCertificate",
+                                  "iam:UpdateSigningCertificate",
+                                  "iam:UpdateSSHPublicKey",
+                                  "iam:UpdateUser",
+                                  "iam:UploadServerCertificate",
+                                  "iam:UploadSigningCertificate",
+                                  "iam:UploadSSHPublicKey",
+                                  "ec2:AcceptVpcPeeringConnection",
+                                  "ec2:Allocate*",
+                                  "ec2:AssignPrivateIpAddresses",
+                                  "ec2:Associate*",
+                                  "ec2:Attach*",
+                                  "ec2:Authorize*",
+                                  "ec2:BundleInstance",
+                                  "ec2:Cancel*",
+                                  "ec2:ConfirmProductInstance",
+                                  "ec2:Copy*",
+                                  "ec2:Create*",
+                                  "ec2:Delete*",
+                                  "ec2:DeregisterImage",
+                                  "ec2:Detach*",
+                                  "ec2:Disable*",
+                                  "ec2:Disassociate*",
+                                  "ec2:Enable*",
+                                  "ec2:Get*",
+                                  "ec2:Import*",
+                                  "ec2:Modify*",
+                                  "ec2:MonitorInstances",
+                                  "ec2:MoveAddressToVpc",
+                                  "ec2:Purchase*",
+                                  "ec2:RebootInstances",
+                                  "ec2:RegisterImage",
+                                  "ec2:RejectVpcPeeringConnection",
+                                  "ec2:Release*",
+                                  "ec2:Replace*",
+                                  "ec2:ReportInstanceStatus",
+                                  "ec2:Request*",
+                                  "ec2:Reset*",
+                                  "ec2:RestoreAddressToClassic",
+                                  "ec2:Revoke*",
+                                  "ec2:Run*",
+                                  "ec2:StartInstances",
+                                  "ec2:StopInstances",
+                                  "ec2:TerminateInstances",
+                                  "ec2:UnassignPrivateIpAddresses",
+                                  "ec2:UnmonitorInstances" ],
+                   "Resource": "*"
+                } ]
+             }
+          } ]
+       }
+    },
+    "InstanceProfile": {
+       "Type": "AWS::IAM::InstanceProfile",
+       "Properties": { "Path": "/", "Roles": [ { "Ref": "Role" } ] }
+    },
+    "LoadBalancer": {
+      "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties": {
+        "Scheme": "internet-facing",
+        "CrossZone": true,
+        "Subnets": { "Ref": "ElbVpcSubnetIds" },
+        "SecurityGroups": { "Ref": "ElbSecurityGroups" },
+        "ConnectionDrainingPolicy": {
+          "Enabled": true,
+          "Timeout": "30"
+        },
+        "HealthCheck" : {
+          "Target" : { "Fn::Join" : [ "", [ "HTTP:", { "Ref": "Port" }, { "Ref": "HealthcheckUrl" } ] ] },
+          "HealthyThreshold" : "2",
+          "UnhealthyThreshold" : "10",
+          "Interval" : "30",
+          "Timeout" : "8"
+        },
+        "Listeners": [{
+          "LoadBalancerPort": "443",
+          "InstancePort": { "Ref": "Port" },
+          "InstanceProtocol": "HTTP",
+          "Protocol": "HTTPS",
+          "SSLCertificateId": { "Ref" : "SSLCertificateArn" }
+        }],
+        "Tags": [
+          { "Key": "Team", "Value": { "Ref": "TeamName" } },
+          { "Key": "Name", "Value": { "Ref": "ApplicationName" } },
+          { "Key": "Environment", "Value": { "Ref": "StackType" } }
+        ]
+      }
+    },
+    "DNSRecord": {
+      "Type": "AWS::Route53::RecordSetGroup",
+      "Properties": {
+        "HostedZoneName": { "Ref": "HostedZoneName" },
+        "RecordSets": [{
+          "Name": { "Ref": "DNS" },
+          "Type": "A",
+          "Weight": "100",
+          "SetIdentifier": "cloudformation",
+          "AliasTarget": {
+            "EvaluateTargetHealth": false,
+            "HostedZoneId": { "Ref": "ElbHostedZoneId" },
+            "DNSName": { "Fn::Join" : [ ".", [ "dualstack", { "Fn::GetAtt" : [ "LoadBalancer", "DNSName" ] } ] ] }
+          }
+        }]
+      }
+    },
+    "LaunchConfiguration": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "InstanceType": { "Ref": "InstanceType" },
+        "IamInstanceProfile": { "Ref": "InstanceProfile" },
+        "ImageId": { "Ref" : "Ami" },
+        "KeyName": { "Ref": "FallbackKeyName" },
+        "SecurityGroups": { "Ref": "InstanceSecurityGroups" },
+        "AssociatePublicIpAddress": "true",
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -ex\n",
+                "python /opt/nova/configure-cloudwatch-logs-agent.py ", { "Ref": "LogsList" }, "\n"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "AutoScalingGroup": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "LaunchConfigurationName": { "Ref": "LaunchConfiguration" },
+        "MinSize": { "Ref": "MinInstances" },
+        "MaxSize": { "Ref": "MaxInstances" },
+        "DesiredCapacity": { "Ref": "MinInstances" },
+        "LoadBalancerNames": [ { "Ref": "LoadBalancer" } ],
+        "VPCZoneIdentifier": { "Ref": "VpcSubnetIds" },
+        "HealthCheckGracePeriod": { "Ref": "ElbHealthCheckGracePeriod" },
+        "HealthCheckType": { "Ref": "AutoScalingGroupHealthCheckType" },
+        "Tags": [
+          { "Key": "Team", "PropagateAtLaunch": true, "Value": { "Ref": "TeamName" } },
+          { "Key": "Name", "PropagateAtLaunch": true, "Value": { "Ref": "ApplicationName" } },
+          { "Key": "Environment", "PropagateAtLaunch": true, "Value": { "Ref": "StackType" } }
+        ],
+        "TerminationPolicies": [ { "Ref": "TerminationPolicy" } ]
+      }
+    },
+    "AutoScalingScaleDownPolicy": {
+      "Type": "AWS::AutoScaling::ScalingPolicy",
+      "Properties": {
+        "AdjustmentType": "ChangeInCapacity",
+        "AutoScalingGroupName": { "Ref": "AutoScalingGroup" },
+        "ScalingAdjustment": "-1"
+      }
+    },
+    "AutoScalingScaleUpPolicy": {
+      "Type": "AWS::AutoScaling::ScalingPolicy",
+      "Properties": {
+        "AdjustmentType": "ChangeInCapacity",
+        "AutoScalingGroupName": { "Ref": "AutoScalingGroup" },
+        "ScalingAdjustment": "1"
+      }
+    },
+    "ScaleUpCloudwatchAlarmHigh": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmActions": [ { "Ref": "AutoScalingScaleUpPolicy" } ],
+        "AlarmDescription": { "Fn::Join" : [ " ", [ { "Ref": "ApplicationName" }, "Scale Up alarm" ] ] },
+        "ComparisonOperator": "GreaterThanThreshold",
+        "Dimensions": [ {
+          "Name" : { "Fn::If" : [ "IsASGBasedScaling", "AutoScalingGroupName", "LoadBalancerName" ] },
+          "Value": { "Fn::If" : [ "IsASGBasedScaling", { "Ref": "AutoScalingGroup" }, { "Ref": "LoadBalancer" } ] }
+        } ],
+        "EvaluationPeriods": { "Ref": "ScaleUpEvaluationPeriods" },
+        "MetricName": { "Ref": "ScalingMetricName" },
+        "Namespace": { "Fn::If" : [ "IsASGBasedScaling", "AWS/EC2", "AWS/ELB" ] },
+        "Period": { "Ref": "ScaleUpPeriod" },
+        "Statistic": { "Ref": "ScalingStatistic" },
+        "Threshold": { "Ref": "ScaleUpThreshold" }
+      }
+    },
+    "ScaleDownCloudwatchAlarmLow": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmActions": [ { "Ref": "AutoScalingScaleDownPolicy" } ],
+        "AlarmDescription": { "Fn::Join" : [ " ", [ { "Ref": "ApplicationName" }, "Scale Down alarm" ] ] },
+        "ComparisonOperator": "LessThanThreshold",
+        "Dimensions": [ {
+          "Name" : { "Fn::If" : [ "IsASGBasedScaling", "AutoScalingGroupName", "LoadBalancerName" ] },
+          "Value": { "Fn::If" : [ "IsASGBasedScaling", { "Ref": "AutoScalingGroup" }, { "Ref": "LoadBalancer" } ] }
+        } ],
+        "EvaluationPeriods": { "Ref": "ScaleDownEvaluationPeriods" },
+        "MetricName": { "Ref": "ScalingMetricName" },
+        "Namespace": { "Fn::If" : [ "IsASGBasedScaling", "AWS/EC2", "AWS/ELB" ] },
+        "Period": { "Ref": "ScaleDownPeriod" },
+        "Statistic": { "Ref": "ScalingStatistic" },
+        "Threshold": { "Ref": "ScaleDownThreshold" }
+      }
+    }
+  },
+  "Outputs": {
+    "DNS": { "Value": { "Ref": "DNSRecord" } },
+    "LoadBalancer": { "Value": { "Ref": "LoadBalancer" } },
+    "AutoScalingGroup": { "Value": { "Ref": "AutoScalingGroup" } }
+  }
+}

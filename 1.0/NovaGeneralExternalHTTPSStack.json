@@ -1,0 +1,210 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "General External Stack",
+  "Parameters" : {
+    "Ami": { "Type": "String", "Default": "ami-0017f716" },
+    "ApplicationName": { "Type": "String" },
+    "AutoScalingGroupHealthCheckType": { "Type": "String", "Default": "ELB" },
+    "DNS": { "Type": "String" },
+    "ElbHealthCheckGracePeriod": { "Type": "Number", "Default": 300 },
+    "ElbHostedZoneId": { "Type": "String", "Default" : "Z35SXDOTRQ7X7K" },
+    "ElbSecurityGroups" : { "Type" : "CommaDelimitedList" },
+    "ElbVpcSubnetIds": { "Type": "CommaDelimitedList" },
+    "FallbackKeyName": { "Type": "String", "Default": "nova" },
+    "HealthcheckUrl": { "Type": "String" },
+    "HostedZoneName": { "Type": "String" },
+    "InstanceSecurityGroups" : { "Type" : "CommaDelimitedList" },
+    "InstanceType": { "Type": "String", "Default": "t2.medium" },
+    "LogsList": { "Type": "String" },
+    "MaxInstances": { "Type": "Number", "Default": 1 },
+    "MinInstances": { "Type": "Number", "Default": 1 },
+    "Port": { "Type": "String" },
+    "SSLCertificateArn": { "Type": "String" },
+    "StackType": { "Type": "String" },
+    "TeamName": { "Type": "String" },
+    "VpcSubnetIds": { "Type": "CommaDelimitedList" }
+  },
+  "Resources": {
+    "Role": {
+       "Type": "AWS::IAM::Role",
+       "Properties": {
+          "AssumeRolePolicyDocument": {
+             "Version" : "2012-10-17",
+             "Statement": [ {
+                "Effect": "Allow",
+                "Principal": { "Service": [ "ec2.amazonaws.com" ] },
+                "Action": [ "sts:AssumeRole" ]
+             } ]
+          },
+          "Path": "/",
+          "Policies": [ {
+             "PolicyName": { "Fn::Join" : [ "-", [ { "Ref": "ApplicationName" }, "policy" ] ] },
+             "PolicyDocument": {
+                "Version" : "2012-10-17",
+                "Statement": [ {
+                   "Effect": "Allow",
+                   "Action": [
+                     "apigateway:*",
+                     "discovery:*",
+                     "appstream:*",
+                     "autoscaling:*",
+                     "acm:*",
+                     "cloudfront:*",
+                     "cloudsearch:*",
+                     "cloudwatch:*",
+                     "events:*",
+                     "logs:*",
+                     "codecommit:*",
+                     "codedeploy:*",
+                     "codepipeline:*",
+                     "cognito-identity:*",
+                     "cognito-sync:*",
+                     "datapipeline:*",
+                     "devicefarm:*",
+                     "dynamodb:*",
+                     "ec2:DescribeTags",
+                     "ecr:*",
+                     "ecs:*",
+                     "elasticfilesystem:*",
+                     "elasticloadbalancing:*",
+                     "elasticmapreduce:*",
+                     "elastictranscoder:*",
+                     "elasticache:*",
+                     "es:*",
+                     "glacier:*",
+                     "iam:ListAccountAliases",
+                     "inspector:*",
+                     "iot:*",
+                     "kms:*",
+                     "kinesis:*",
+                     "firehose:*",
+                     "lambda:*",
+                     "machinelearning:*",
+                     "apigateway:*",
+                     "mechanicalturk:*",
+                     "mobileanalytics:*",
+                     "mobilehub:*",
+                     "rds:*",
+                     "redshift:*",
+                     "route53:*",
+                     "s3:*",
+                     "sts:*",
+                     "ses:*",
+                     "ssm:*",
+                     "swf:*",
+                     "sdb:*",
+                     "sns:*",
+                     "sqs:*",
+                     "storagegateway:*",
+                     "trustedadvisor:*",
+                     "waf:*",
+                     "workdocs:*",
+                     "workmail:*",
+                     "workspaces:*"
+                   ],
+                   "Resource": "*"
+                } ]
+             }
+          } ]
+       }
+    },
+    "InstanceProfile": {
+       "Type": "AWS::IAM::InstanceProfile",
+       "Properties": { "Path": "/", "Roles": [ { "Ref": "Role" } ] }
+    },
+    "LoadBalancer": {
+      "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties": {
+        "Scheme": "internet-facing",
+        "CrossZone": true,
+        "Subnets": { "Ref": "ElbVpcSubnetIds" },
+        "SecurityGroups": { "Ref": "ElbSecurityGroups" },
+        "ConnectionDrainingPolicy": {
+          "Enabled": true,
+          "Timeout": "30"
+        },
+        "HealthCheck" : {
+          "Target" : { "Fn::Join" : [ "", [ "HTTP:", { "Ref": "Port" }, { "Ref": "HealthcheckUrl" } ] ] },
+          "HealthyThreshold" : "2",
+          "UnhealthyThreshold" : "10",
+          "Interval" : "30",
+          "Timeout" : "8"
+        },
+        "Listeners": [{
+          "LoadBalancerPort": "443",
+          "InstancePort": { "Ref": "Port" },
+          "InstanceProtocol": "HTTP",
+          "Protocol": "HTTPS",
+          "SSLCertificateId": { "Ref" : "SSLCertificateArn" }
+        }],
+        "Tags": [
+          { "Key": "Team", "Value": { "Ref": "TeamName" } },
+          { "Key": "Name", "Value": { "Ref": "ApplicationName" } },
+          { "Key": "Environment", "Value": { "Ref": "StackType" } }
+        ]
+      }
+    },
+    "DNSRecord": {
+      "Type": "AWS::Route53::RecordSetGroup",
+      "Properties": {
+        "HostedZoneName": { "Ref": "HostedZoneName" },
+        "RecordSets": [{
+          "Name": { "Ref": "DNS" },
+          "Type": "A",
+          "Weight": "100",
+          "SetIdentifier": "cloudformation",
+          "AliasTarget": {
+            "EvaluateTargetHealth": false,
+            "HostedZoneId": { "Ref": "ElbHostedZoneId" },
+            "DNSName": { "Fn::Join" : [ ".", [ "dualstack", { "Fn::GetAtt" : [ "LoadBalancer", "DNSName" ] } ] ] }
+          }
+        }]
+      }
+    },
+    "LaunchConfiguration": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "InstanceType": { "Ref": "InstanceType" },
+        "IamInstanceProfile": { "Ref": "InstanceProfile" },
+        "ImageId": { "Ref" : "Ami" },
+        "KeyName": { "Ref": "FallbackKeyName" },
+        "SecurityGroups": { "Ref": "InstanceSecurityGroups" },
+        "AssociatePublicIpAddress": "true",
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -ex\n",
+                "python /opt/nova/configure-cloudwatch-logs-agent.py ", { "Ref": "LogsList" }, "\n"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "AutoScalingGroup": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "LaunchConfigurationName": { "Ref": "LaunchConfiguration" },
+        "MinSize": { "Ref": "MinInstances" },
+        "MaxSize": { "Ref": "MaxInstances" },
+        "DesiredCapacity": { "Ref": "MinInstances" },
+        "LoadBalancerNames": [ { "Ref": "LoadBalancer" } ],
+        "VPCZoneIdentifier": { "Ref": "VpcSubnetIds" },
+        "HealthCheckGracePeriod": { "Ref": "ElbHealthCheckGracePeriod" },
+        "HealthCheckType": { "Ref": "AutoScalingGroupHealthCheckType" },
+        "Tags": [
+          { "Key": "Team", "PropagateAtLaunch": true, "Value": { "Ref": "TeamName" } },
+          { "Key": "Name", "PropagateAtLaunch": true, "Value": { "Ref": "ApplicationName" } },
+          { "Key": "Environment", "PropagateAtLaunch": true, "Value": { "Ref": "StackType" } }
+        ]
+      }
+    }
+  },
+  "Outputs": {
+    "DNS": { "Value": { "Ref": "DNSRecord" } },
+    "LoadBalancer": { "Value": { "Ref": "LoadBalancer" } },
+    "AutoScalingGroup": { "Value": { "Ref": "AutoScalingGroup" } }
+  }
+}
